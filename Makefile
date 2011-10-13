@@ -1,6 +1,6 @@
 VERSION=0.04
-PACKAGE=GetOpt
-#RIFT='/home/seebs/wow/Interface/AddOns'
+PACKAGE=LibGetOpt
+RIFT=/d/RIFT Game/Interface/AddOns
 
 package:
 	rm -rf $(PACKAGE)
@@ -13,5 +13,5 @@ package:
 release: package
 	zip -r $(PACKAGE)-$(VERSION).zip $(PACKAGE)
 
-#install: package
-#	cp $(PACKAGE)/* $(WOW)/$(PACKAGE)
+install: package
+	cp $(PACKAGE)/* "$(RIFT)"/$(PACKAGE)

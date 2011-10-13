@@ -1,4 +1,7 @@
 2011/10/12:
+	* Cleanup and fix naming (use LibGetOpt.lua instead of GetOpt.lua)
+
+2011/10/12:
 	* Migrate to RIFT addon API
 	* Create slash-command-maker
 

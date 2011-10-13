@@ -16,7 +16,7 @@ Description = {
 }
 
 RunOnStartup = {
-  "GetOpt.lua"
+  "LibGetOpt.lua"
 }
 
 Environment = "1.5"
