@@ -1,0 +1,13 @@
+2011/10/12:
+	* Migrate to RIFT addon API
+	* Create slash-command-maker
+
+2008/10/14:
+	* Release 0.03.  Update TOC.
+
+2008/04/28:
+	* Release 0.02.  Update TOC.
+	* Fix some indenting.
+
+2007/11/14
+	* Release 0.01, with initial minimal feature set.
