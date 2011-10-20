@@ -1,4 +1,4 @@
-VERSION=0.04
+VERSION=0.5
 PACKAGE=LibGetOpt
 RIFT=/d/RIFT Game/Interface/AddOns
 

@@ -22,8 +22,10 @@ a numeric argument.
 
 If you pass in a table, instead of an argument string, it is treated as a list
 of arguments; otherwise, the string is split around whitespace (but
-double-quoted strings are preserved -- note that getopt doesn't know about
-backslashes, though).
+double-quoted strings are preserved).  Quoting follows the standard Unixy
+rules for double quotes; backslashed double quotes are not special, quotes
+override spaces.  If quotes are mismatched, or the last character is a
+backslash, an error is reported.  "" as a word yields an empty string.
 
 If you pass in a table, instead of an option string, it can be a list of
 options that can include long option forms; each item in the table is itself
@@ -56,6 +58,11 @@ that for you, too!  Just call
 and LibGetOpt will register /name for you; when /name is called, it will
 be parsed with the options you specified (which can be a string or table,
 same as always), and the resulting table passed to func.
+
+You can also use
+	Library.LibGetOpt.dequote(string)
+to get a string broken down into a table of words, respecting quoting
+conventions.
 
 Code and documentation copyright 2007, 2011 Peter Seebach.  Permission granted
 to use and redistribute under any terms that make you happy.  I like the BSD

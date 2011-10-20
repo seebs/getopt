@@ -146,6 +146,91 @@ function GetOpt.print(options)
   end
 end
 
+function GetOpt.dequote(args)
+  local newargs = {}
+  if (not args) then
+    return newargs
+  end
+  if (type(args) ~= 'string') then
+    GetOpt.Debug(0, "Was asked to dequote a non-string, can't do that.")
+    return newargs
+  end
+  local current = ''
+  local word = false
+  -- the "do repeat ... until true end" turns a break into a continue;
+  -- that's fine by me
+  local done = false
+  local backslash = false
+  local quoted = false
+  for index=1,string.len(args) do
+    repeat
+      local ch = args:sub(index, index)
+      if not ch then
+	GetOpt.Debug(4, "got nil trying to read char %d of <%s>", index, args)
+        break
+      else
+        GetOpt.Debug(4, "index %d of <%s>, got <%s>, current <%s>", index, args, ch or 'nil', current or 'nil')
+      end
+      -- if we are not in a word, skip spaces
+      if not word then
+	if (backslash) then
+	  -- no matter what the next character is, it is the start
+	  -- of a word and has no other meaning
+	  word = true
+	  current = ch
+	  backslash = false
+	else
+	  if (ch == '\\') then
+	    backslash = true
+	    break
+	  elseif (ch == '"') then
+	    quoted = true
+	    -- quoting starts a word even if there's nothing else in it
+	    word = true
+	    break
+	  elseif (not quoted and string.find(ch, '%s')) then
+	    -- this is a space, it's not quoted, we already checked
+	    -- for backslash, we're not in a word... skip it
+	    break
+	  else
+	    -- anything else just starts a word
+	    word = true
+	    current = ch
+	  end
+        end
+      else
+        if (backslash) then
+	  current = current .. ch
+	  backslash = false
+	else
+	  if (ch == '\\') then
+	    backslash = true
+	    break
+	  elseif (ch == '"') then
+	    quoted = not quoted
+	  elseif (not quoted and string.find(ch, '%s')) then
+	    table.insert(newargs, current)
+	    current = ''
+	    word = false
+	  else
+	    current = current .. ch
+	  end
+	end
+      end
+    until true
+    if done then
+      break
+    end
+  end
+  if (quoted or backslash) then
+    GetOpt.Debug(0, "Unterminated quote or backslash.")
+    newargs = {}
+  elseif (word) then
+    table.insert(newargs, current)
+  end
+  return newargs
+end
+
 function GetOpt.getopt(options, args)
   local output = {}; 
   if (args == nil) then
@@ -155,30 +240,7 @@ function GetOpt.getopt(options, args)
     options = GetOpt.parseopt(options)
   end
   if (type(args) ~= 'table') then
-    local newargs = {}
-    while (args and string.len(args) > 0) do
-      if (string.find(args, "^\"")) then
-	local from, to, quoted = string.find(args, "\"([^\"]*)\"")
-	if (quoted == nil) then
-	  GetOpt.Debug(0, "Unterminated quoted string '%s'.  Can't figure out how to parse that.", args)
-	  return nil
-	end
-	table.insert(newargs, quoted)
-	args = string.sub(args, to + 1)
-      elseif (string.find(args, "^%s")) then
-	args = string.gsub(args, "^%s*", "", 1)
-      else
-	local from = string.find(args, "%s")
-	if (from ~= nil) then
-	  table.insert(newargs, string.sub(args, 1, from - 1))
-	  args = string.sub(args, from + 1)
-	else
-	  table.insert(newargs, args)
-	  args = nil
-	end
-      end
-    end
-    args = newargs
+    args = GetOpt.dequote(args)
     GetOpt.Debug(2, "converted string to %d arguments.", table.getn(args))
   end
   local expected = {}
@@ -230,6 +292,7 @@ function GetOpt.getopt(options, args)
       for c in string.gmatch(short, '.') do
 	if (c == '?') then
 	  GetOpt.print(options)
+	  return nil
 	elseif (not string.find(c, '%w')) then
 	  GetOpt.Debug(0, "Only alphanumeric values are accepted as flags (%s).", c)
 	  return nil
@@ -300,6 +363,11 @@ function GetOpt.slashcommand(args)
       GetOpt.Debug(0, "Setting debug level to %d", x.d)
       GetOpt.DebugLevel = x.d
     end
+    if (x.leftover_args) then
+      for i, o in ipairs(x.leftover_args) do
+        GetOpt.Debug(0, "%d: <%s>", i, o)
+      end
+    end
   end
 end
 
@@ -317,4 +385,3 @@ function GetOpt.makeslash(opts, addonname, name, func)
     table.insert(newcommand, { dummy, addonname, string.format("/%s", name) })
   end
 end
-

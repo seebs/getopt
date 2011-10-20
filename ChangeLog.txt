@@ -1,7 +1,10 @@
-2011/10/12:
+2011/10/12: (0.05)
 	* Cleanup and fix naming (use LibGetOpt.lua instead of GetOpt.lua)
+	* Rework tokenizing entirely to handle backslashes and quotes
+	* Expose "dequote" as a function in case someone wants it
+	* Don't report an error after handling -?
 
-2011/10/12:
+2011/10/12: (0.04)
 	* Migrate to RIFT addon API
 	* Create slash-command-maker
 
