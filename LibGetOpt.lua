@@ -37,10 +37,9 @@ GetOpt.sampletable = {
 GetOpt.DebugLevel = 0
 GetOpt.Version = "VERSION"
 
-function GetOpt.Debug(level, text, arg1, arg2, arg3, arg4, arg5, arg6, arg7,
-arg8, arg9)
+function GetOpt.Debug(level, text, ...)
   if (level <= GetOpt.DebugLevel) then
-    print("GetOpt: " .. string.format(text or 'nil', arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9))
+    print(string.format(text or 'nil', ...))
   end
 end
 

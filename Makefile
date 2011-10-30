@@ -1,6 +1,6 @@
 VERSION=0.5
 PACKAGE=LibGetOpt
-RIFT=/d/RIFT Game/Interface/AddOns
+RIFT=/c/games/RIFT Game/Interface/AddOns
 
 package:
 	rm -rf $(PACKAGE)
