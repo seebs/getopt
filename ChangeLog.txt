@@ -1,3 +1,9 @@
+2011/11/09:
+	* Update to 0.7
+	* Add 1.6 support
+	* 0.6 existed only as an embedded plugin in LibPerfORate for
+	  debugging reasons, ignore it.
+
 2011/10/29:
 	* Use ... for variadic functions
 	* Remove leading "GetOpt:" from output, since API does that for us.
