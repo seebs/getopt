@@ -20,6 +20,11 @@
        { "number", "n", "#", "descr" } -- numeric argument
      }
 
+     Flags are:
+     	:	Requires argument
+	#	Requires numeric argument
+	+	Accept multiple arguments
+
      In the event of an error, getopt diagnoses as much as it can, and
      returns nil.
 ]]--
@@ -45,14 +50,14 @@ end
 
 function GetOpt.parseopt(options)
   local lookup = {}
-  for w in string.gmatch(options, '%a%p?') do
-    _, _, letter, flag = string.find(w, '(%a)(%p?)')
-    if (flag == "") then
-      flag = nil
+  for w in string.gmatch(options, '%a%p*') do
+    local letter, flags = string.match(w, '(%a)(%p*)')
+    if flags == "" then
+      flags = nil
     end
-    local entry = { nil, letter, flag, "(no documentation available)" }
+    local entry = { nil, letter, flags, "(no documentation available)" }
     table.insert(lookup, entry)
-    GetOpt.Debug(3, "character %s, flag %s.", letter, flag or "nil")
+    GetOpt.Debug(3, "character %s, flags %s.", letter, flags or "nil")
   end
   GetOpt.Debug(2, "found %d flags in '%s'.", table.getn(lookup), options)
   return lookup
@@ -62,7 +67,7 @@ function GetOpt.find(options, option)
   if (option == nil or options == nil) then
     return nil
   end
-  if (string.len(option) > 1) then
+  if string.len(option) > 1 then
     for i, o in ipairs(options) do
       if (o[1] == option) then
 	return o
@@ -104,10 +109,10 @@ function GetOpt.descr(options, option)
   end
 end
 
-function GetOpt.flag(options, option)
+function GetOpt.flags(options, option)
   local o = GetOpt.find(options, option)
   if (o) then
-    GetOpt.Debug(3, "option '%s', flag '%s'", option, o[3] or 'nil')
+    GetOpt.Debug(3, "option '%s', flags '%s'", option, o[3] or 'nil')
     return o[3]
   else
     GetOpt.Debug(3, "option '%s' unfound!")
@@ -132,14 +137,21 @@ function GetOpt.print(options)
     else
       descr = string.format("inexplicably unreachable option: %s", o_d)
     end
-    if (o_f) then
-      if (o_f == ":") then
+    if o_f then
+      if o_f.sub(2) == '+' then
+        o_f = o_f.sub(1, 1)
+	multiple = ' (multiple allowed)'
+      else
+        multiple = ''
+      end
+      if o_f == ":" then
 	descr = descr .. " (string)"
-      elseif (o_f == "#") then
+      elseif o_f == "#" then
 	descr = descr .. " (number)"
       else
 	descr = descr .. " (... unknown format?)"
       end
+      descr = descr .. multiple
     end
     GetOpt.Debug(0, "%s", descr)
   end
@@ -147,23 +159,23 @@ end
 
 function GetOpt.dequote(args)
   local newargs = {}
-  if (not args) then
+  if not args then
     return newargs
   end
-  if (type(args) ~= 'string') then
+  if type(args) ~= 'string' then
     GetOpt.Debug(0, "Was asked to dequote a non-string, can't do that.")
     return newargs
   end
   local current = ''
   local word = false
-  -- the "do repeat ... until true end" turns a break into a continue;
+  -- the "do repeat ... until true end" turns a break into a continue
   -- that's fine by me
   local done = false
   local backslash = false
   local quoted = false
-  for index=1,string.len(args) do
+  for index=1, string.len(args) do
     repeat
-      local ch = args:sub(index, index)
+      local ch = string.sub(args, index, index)
       if not ch then
 	GetOpt.Debug(4, "got nil trying to read char %d of <%s>", index, args)
         break
@@ -172,22 +184,22 @@ function GetOpt.dequote(args)
       end
       -- if we are not in a word, skip spaces
       if not word then
-	if (backslash) then
+	if backslash then
 	  -- no matter what the next character is, it is the start
 	  -- of a word and has no other meaning
 	  word = true
 	  current = ch
 	  backslash = false
 	else
-	  if (ch == '\\') then
+	  if ch == '\\' then
 	    backslash = true
 	    break
-	  elseif (ch == '"') then
+	  elseif ch == '"' then
 	    quoted = true
 	    -- quoting starts a word even if there's nothing else in it
 	    word = true
 	    break
-	  elseif (not quoted and string.find(ch, '%s')) then
+	  elseif not quoted and string.find(ch, '%s') then
 	    -- this is a space, it's not quoted, we already checked
 	    -- for backslash, we're not in a word... skip it
 	    break
@@ -198,16 +210,16 @@ function GetOpt.dequote(args)
 	  end
         end
       else
-        if (backslash) then
+        if backslash then
 	  current = current .. ch
 	  backslash = false
 	else
-	  if (ch == '\\') then
+	  if ch == '\\' then
 	    backslash = true
 	    break
-	  elseif (ch == '"') then
+	  elseif ch == '"' then
 	    quoted = not quoted
-	  elseif (not quoted and string.find(ch, '%s')) then
+	  elseif not quoted and string.find(ch, '%s') then
 	    table.insert(newargs, current)
 	    current = ''
 	    word = false
@@ -221,7 +233,7 @@ function GetOpt.dequote(args)
       break
     end
   end
-  if (quoted or backslash) then
+  if quoted or backslash then
     GetOpt.Debug(0, "Unterminated quote or backslash.")
     newargs = {}
   elseif (word) then
@@ -231,14 +243,14 @@ function GetOpt.dequote(args)
 end
 
 function GetOpt.getopt(options, args)
-  local output = {}; 
+  local output = {} 
   if (args == nil) then
     return output
   end
-  if (type(options) ~= 'table') then
+  if type(options) ~= 'table' then
     options = GetOpt.parseopt(options)
   end
-  if (type(args) ~= 'table') then
+  if type(args) ~= 'table' then
     args = GetOpt.dequote(args)
     GetOpt.Debug(2, "converted string to %d arguments.", table.getn(args))
   end
@@ -250,57 +262,80 @@ function GetOpt.getopt(options, args)
     GetOpt.Debug(2, "%d: '%s'", i, arg)
     local long = string.match(arg, "^%-%-(.*)$")
     local short = string.match(arg, "^%-(.*)$")
-    if (done) then
+    if done then
       table.insert(extra, arg)
-      if (string.len(extra_text)) then
+      if string.len(extra_text) then
         extra_text = extra_text .. " " .. arg
       else
 	extra_text = arg
       end
-    elseif (table.getn(expected) > 0) then
+    elseif table.getn(expected) > 0 then
       local slot = table.remove(expected, 1)
-      if (GetOpt.flag(options, slot) == "#") then
-	if (tonumber(arg) == nil) then
+      local flags = GetOpt.flags(options, slot)
+      local multiple = string.match(flags or "", '+')
+      if string.match(flags or "", '#') then
+	if tonumber(arg) == nil then
 	  GetOpt.Debug(0, "Option '%s' requires numeric value, which '%s' is not.", slot, arg)
 	  return nil
+	end
+	if multiple then
+	  output[slot] = output[slot] or {}
+          table.insert(output[slot], tonumber(arg))
 	else
 	  output[slot] = tonumber(arg)
 	end
       else
-        output[slot] = arg
+	if multiple then
+	  output[slot] = output[slot] or {}
+          table.insert(output[slot], arg)
+	else
+	  output[slot] = arg
+        end
       end
-    elseif (long) then
+    elseif long then
       GetOpt.Debug(2, "long option: %s", long)
-      if (long == "") then
+      if long == "" then
 	GetOpt.Debug(2, "found forced end of options.")
 	done = true
       else
-	if (GetOpt.find(long)) then
-	  if (GetOpt.flag(options, long)) then
+	if GetOpt.find(long) then
+	  local flags = GetOpt.flags(options, long)
+	  local multiple = string.match(flags or "", '+')
+	  if string.match(flags or "", '[:#]') then
 	    table.insert(expected, long)
 	  else
-	    output[long] = true
+	    if multiple then
+	      output[long] = (output[long] or 0) + 1
+	    else
+	      output[long] = true
+	    end
 	  end
         else
 	  GetOpt.Debug(0, "unknown long option '--%s'.", long)
 	  return nil
 	end
       end
-    elseif (short) then
+    elseif short then
       GetOpt.Debug(2, "short options: '%s'", short)
       for c in string.gmatch(short, '.') do
-	if (c == '?') then
+	if c == '?' then
 	  GetOpt.print(options)
 	  return nil
-	elseif (not string.find(c, '%w')) then
+	elseif not string.find(c, '%w') then
 	  GetOpt.Debug(0, "Only alphanumeric values are accepted as flags (%s).", c)
 	  return nil
 	end
-	if (GetOpt.find(options, c)) then
-	  if (GetOpt.flag(options, c)) then
+	if GetOpt.find(options, c) then
+	  local flags = GetOpt.flags(options, c)
+	  local multiple = string.match(flags or "", '+')
+	  if string.match(flags or "", '[:#]') then
 	    table.insert(expected, c)
 	  else
-	    output[c] = true
+	    if multiple then
+	      output[c] = (output[c] or 0) + 1
+	    else
+	      output[c] = true
+	    end
 	  end
 	else
 	  GetOpt.Debug(0, "Unknown flag '-%s'.", c)
@@ -314,7 +349,7 @@ function GetOpt.getopt(options, args)
       done = true
     end
   end
-  if (table.getn(expected) > 0) then
+  if table.getn(expected) > 0 then
     GetOpt.Debug(0, "Option '%s' expected an argument, which was missing.",
 	expected[1])
     return nil
@@ -323,18 +358,18 @@ function GetOpt.getopt(options, args)
   output["leftover_args"] = extra
   local mirrors = {}
   for k, v in pairs(output) do
-    if (type(v) == "string") then
+    if type(v) == "string" then
       GetOpt.Debug(2, "%s -> \"%s\"", k, v)
-    elseif (type(v) == "table") then
+    elseif type(v) == "table" then
       GetOpt.Debug(2, "%s -> table [%d items]", k, table.getn(v))
-    elseif (type(v) == "number") then
+    elseif type(v) == "number" then
       GetOpt.Debug(2, "%s -> %d", k, v)
-    elseif (type(v) == "boolean" and v == true) then
+    elseif type(v) == "boolean" and v == true then
       GetOpt.Debug(2, "%s is set", k)
     else
       GetOpt.Debug(2, "%s -> [%s]", k, type(v))
     end
-    if (string.len(k) == 1) then
+    if string.len(k) == 1 then
       local l = GetOpt.long(options, k)
       if (l) then
 	mirrors[l] = v
@@ -354,15 +389,14 @@ end
 
 function GetOpt.slashcommand(args)
   x = GetOpt.getopt("d#", args)
-  -- This is for debugging with the lovely TableShow
   GetOpt.recent = x
   GetOpt.Debug(0, "version %s", GetOpt.Version)
-  if (x) then
+  if x then
     if (x.d) then
       GetOpt.Debug(0, "Setting debug level to %d", x.d)
       GetOpt.DebugLevel = x.d
     end
-    if (x.leftover_args) then
+    if x.leftover_args then
       for i, o in ipairs(x.leftover_args) do
         GetOpt.Debug(0, "%d: <%s>", i, o)
       end
@@ -377,10 +411,14 @@ end
 
 function GetOpt.makeslash(opts, addonname, name, func)
   local newcommand = Command.Slash.Register(name)
-  local dummy = function(args)
-    func(GetOpt.getopt(opts, args))
-  end
-  if (newcommand) then
+  if newcommand then
+    local dummy = function(args)
+      func(GetOpt.getopt(opts, args))
+    end
     table.insert(newcommand, { dummy, addonname, string.format("/%s", name) })
+    return true
+  else
+    GetOpt.Debug(0, "Couldn't register '%s'.", name)
+    return false
   end
 end

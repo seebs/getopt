@@ -1,17 +1,5 @@
-VERSION=0.7
+VERSION=0.8
 PACKAGE=LibGetOpt
-RIFT=/c/games/RIFT Game/Interface/AddOns
 
-package:
-	rm -rf $(PACKAGE)
-	mkdir $(PACKAGE)
-	rm -f $(PACKAGE)-$(VERSION).zip
-	sed -e "s/VERSION/$(VERSION)/" < RiftAddon.toc > $(PACKAGE)/RiftAddon.toc
-	sed -e "s/VERSION/$(VERSION)/" < $(PACKAGE).lua > $(PACKAGE)/$(PACKAGE).lua
-	cp *.txt $(PACKAGE)/.
+include ../addon.mk
 
-release: package
-	zip -r $(PACKAGE)-$(VERSION).zip $(PACKAGE)
-
-install: package
-	cp $(PACKAGE)/* "$(RIFT)"/$(PACKAGE)

@@ -7,7 +7,7 @@ to the options.
 
 For instance:
 
-Library.LibGetOpt.getopt("ab:", "-a -b foo bar") ->
+	Library.LibGetOpt.getopt("ab:", "-a -b foo bar") ->
 
 	{ "a" -> true,
 	  "b" -> "foo",
@@ -18,7 +18,18 @@ Library.LibGetOpt.getopt("ab:", "-a -b foo bar") ->
 The usage here is fairly similar to traditional UNIX getopt; letters indicate
 options, a colon indicates that the previous option requires an argument.
 As an extension, a pound sign indicates that the previous option requires
-a numeric argument.
+a numeric argument.  A plus sign indicates that the previous option can
+be specified multiple times.  If it has a : or # qualifier, this will result
+in args[opt] being a table of strings/numbers, otherwise it will result
+in args[opt] being a count of times specified.  So:
+	
+	Library.LibGetOpt.getopt("v+a:+", "-vva one -a two") ->
+	{
+	  "v" -> 2,
+	  "a" -> { "one", "two" }
+	  "leftover" -> "",
+	  "leftover_args" -> { "" },
+	}
 
 If you pass in a table, instead of an argument string, it is treated as a list
 of arguments; otherwise, the string is split around whitespace (but
@@ -57,14 +68,16 @@ that for you, too!  Just call
 	Library.LibGetOpt.makeslash(opts, addonname, name, func)
 and LibGetOpt will register /name for you; when /name is called, it will
 be parsed with the options you specified (which can be a string or table,
-same as always), and the resulting table passed to func.
+same as always), and the resulting table passed to func.  The makeslash
+function returns true on success, and prints a diagnostic and returns
+false on error.
 
 You can also use
 	Library.LibGetOpt.dequote(string)
 to get a string broken down into a table of words, respecting quoting
 conventions.
 
-Code and documentation copyright 2007, 2011 Peter Seebach.  Permission granted
-to use and redistribute under any terms that make you happy.  I like the BSD
-license, but it's up to you.
+Code and documentation copyright 2007, 2011, 2012 Peter Seebach.  Permission
+granted to use and redistribute under any terms that make you happy.  I like
+the BSD license, but it's up to you.
 

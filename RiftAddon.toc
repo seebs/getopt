@@ -1,6 +1,6 @@
 Identifier = "LibGetOpt"
 
-Version = "0.4"
+Version = "VERSION"
 
 Email = "seebs@seebs.net"
 

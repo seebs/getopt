@@ -1,3 +1,9 @@
+2012/03/01:
+	* Report failure to register slash commands.
+
+2011/11/20:
+	* Add + flag for multiply-specified things.
+
 2011/11/09:
 	* Update to 0.7
 	* Add 1.6 support
