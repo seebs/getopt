@@ -62,7 +62,7 @@ function GetOpt.parseopt(options)
     table.insert(lookup, entry)
     GetOpt.Debug(3, "character %s, flags %s.", letter, flags or "nil")
   end
-  GetOpt.Debug(2, "found %d flags in '%s'.", table.getn(lookup), options)
+  GetOpt.Debug(2, "found %d flags in '%s'.", #lookup, options)
   return lookup
 end
 
@@ -70,7 +70,7 @@ function GetOpt.find(options, option)
   if (option == nil or options == nil) then
     return nil
   end
-  if string.len(option) > 1 then
+  if #option > 1 then
     for i, o in ipairs(options) do
       if (o[1] == option) then
 	return o
@@ -141,8 +141,8 @@ function GetOpt.print(options)
       descr = string.format("inexplicably unreachable option: %s", o_d)
     end
     if o_f then
-      if o_f.sub(2) == '+' then
-        o_f = o_f.sub(1, 1)
+      if o_f:sub(2) == '+' then
+        o_f = o_f:sub(1, 1)
 	multiple = ' (multiple allowed)'
       else
         multiple = ''
@@ -173,10 +173,9 @@ function GetOpt.dequote(args)
   local word = false
   -- the "do repeat ... until true end" turns a break into a continue
   -- that's fine by me
-  local done = false
   local backslash = false
   local quoted = false
-  for index=1, string.len(args) do
+  for index=1, #args do
     repeat
       local ch = string.sub(args, index, index)
       if not ch then
@@ -232,9 +231,6 @@ function GetOpt.dequote(args)
 	end
       end
     until true
-    if done then
-      break
-    end
   end
   if quoted or backslash then
     GetOpt.Debug(0, "Unterminated quote or backslash.")
@@ -255,7 +251,7 @@ function GetOpt.getopt(options, args)
   end
   if type(args) ~= 'table' then
     args = GetOpt.dequote(args)
-    GetOpt.Debug(2, "converted string to %d arguments.", table.getn(args))
+    GetOpt.Debug(2, "converted string to %d arguments.", #args)
   end
   local expected = {}
   local extra = {}
@@ -267,12 +263,12 @@ function GetOpt.getopt(options, args)
     local short = string.match(arg, "^%-(.*)$")
     if done then
       table.insert(extra, arg)
-      if string.len(extra_text) then
+      if #extra_text then
         extra_text = extra_text .. " " .. arg
       else
 	extra_text = arg
       end
-    elseif table.getn(expected) > 0 then
+    elseif #expected > 0 then
       local slot = table.remove(expected, 1)
       local flags = GetOpt.flags(options, slot)
       local multiple = string.match(flags or "", '+')
@@ -301,7 +297,7 @@ function GetOpt.getopt(options, args)
 	GetOpt.Debug(2, "found forced end of options.")
 	done = true
       else
-	if GetOpt.find(long) then
+	if GetOpt.find(options, long) then
 	  local flags = GetOpt.flags(options, long)
 	  local multiple = string.match(flags or "", '+')
 	  if string.match(flags or "", '[:#]') then
@@ -352,7 +348,7 @@ function GetOpt.getopt(options, args)
       done = true
     end
   end
-  if table.getn(expected) > 0 then
+  if #expected > 0 then
     GetOpt.Debug(0, "Option '%s' expected an argument, which was missing.",
 	expected[1])
     return nil
@@ -372,7 +368,7 @@ function GetOpt.getopt(options, args)
     else
       GetOpt.Debug(2, "%s -> [%s]", k, type(v))
     end
-    if string.len(k) == 1 then
+    if #k == 1 then
       local l = GetOpt.long(options, k)
       if (l) then
 	mirrors[l] = v

@@ -1,4 +1,4 @@
-VERSION=0.9
+VERSION=0.10
 PACKAGE=LibGetOpt
 
 include ../addon.mk
