@@ -23,12 +23,12 @@ be specified multiple times.  If it has a : or # qualifier, this will result
 in args[opt] being a table of strings/numbers, otherwise it will result
 in args[opt] being a count of times specified.  So:
 	
-	Library.LibGetOpt.getopt("v+a:+", "-vva one -a two") ->
+	Library.LibGetOpt.getopt("v+a:+", "-vva one -a two three four") ->
 	{
 	  "v" -> 2,
 	  "a" -> { "one", "two" }
-	  "leftover" -> "",
-	  "leftover_args" -> { "" },
+	  "leftover" -> "three four",
+	  "leftover_args" -> { "three", "four" },
 	}
 
 If you pass in a table, instead of an argument string, it is treated as a list

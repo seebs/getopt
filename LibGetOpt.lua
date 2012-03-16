@@ -27,6 +27,9 @@
 
      In the event of an error, getopt diagnoses as much as it can, and
      returns nil.
+
+     See the provided COPYRIGHT.txt for licensing; basically, use this
+     however you want, don't blame me.
 ]]--
 
 if not Library then Library = {} end
